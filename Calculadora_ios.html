@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora iOS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f6f2f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* Contenedor tipo iPod / iPhone */
+        .phone-case {
+            background-color: #ffffff;
+            border: 1px solid #d1d1d6;
+            border-radius: 40px;
+            padding: 18px 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Detalle de cámara superior de iPod/iPhone */
+        .camera-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #1c1c1e;
+            border-radius: 50%;
+            margin-bottom: 12px;
+        }
+
+        /* Pantalla táctil negra interna */
+        .calculator-screen {
+            background-color: #000000;
+            width: 100%;
+            border-radius: 24px;
+            padding: 12px 14px 18px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+        }
+
+        /* Barra de estado (Status Bar) */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 6px;
+            margin-bottom: 20px;
+        }
+
+        .battery-icon {
+            width: 18px;
+            height: 9px;
+            border: 1px solid #ffffff;
+            border-radius: 2px;
+            padding: 1px;
+            position: relative;
+        }
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 2px;
+            width: 2px;
+            height: 3px;
+            background-color: #ffffff;
+            border-radius: 0 1px 1px 0;
+        }
+        .battery-level {
+            background-color: #d3d8e2;
+            height: 100%;
+            width: 100%;
+            border-radius: 0.5px;
+        }
+
+        /* Área de Display de Resultado */
+        .display-container {
+            text-align: right;
+            padding: 0 8px 10px 8px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .display-text {
+            color: #ffffff;
+            font-size: 56px;
+            font-weight: 300;
+            line-height: 1;
+            letter-spacing: -0.5px;
+        }
+
+        /* Disposición de Botones */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            height: 58px;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: 400;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.15s ease, filter 0.15s ease;
+        }
+
+        .btn:active {
+            opacity: 0.7;
+        }
+
+        /* Botón Cero con forma de píldora */
+        .btn-zero {
+            grid-column: span 2;
+            border-radius: 29px;
+            justify-content: flex-start;
+            padding-left: 22px;
+        }
+
+        /* Tipos de Botones según su color */
+        /* Gris claro (Funciones superiores) */
+        .btn-gray-light {
+            background-color: #a5a5a5;
+            color: #000000;
+        }
+
+        /* Gris oscuro (Números) */
+        .btn-gray-dark {
+            background-color: #333333;
+            color: #ffffff;
+        }
+
+        /* Naranja (Operadores) */
+        .btn-orange {
+            background-color: #ff9f0a;
+            color: #ffffff;
+            font-size: 26px;
+        }
+
+        .btn-orange.active-op {
+            background-color: #ffffff;
+            color: #ff9f0a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-case">
+        <!-- Sensor superior del iPod -->
+        <div class="camera-dot"></div>
+
+        <!-- Pantalla negra -->
+        <div class="calculator-screen">
+            
+            <!-- Barra superior -->
+            <div class="status-bar">
+                <span>9:41 AM</span>
+                <div class="battery-icon">
+                    <div class="battery-level"></div>
+                </div>
+            </div>
+
+            <!-- Pantalla con número actual -->
+            <div class="display-container">
+                <div id="display" class="display-text">0</div>
+            </div>
+
+            <!-- Botonera -->
+            <div class="keypad">
+                <!-- Fila 1 -->
+                <button onclick="handleAC()" id="btn-ac" class="btn btn-gray-light">AC</button>
+                <button onclick="handlePercent()" class="btn btn-gray-light">%</button>
+                <button onclick="handlePercent()" class="btn btn-gray-light">%</button>
+                <button onclick="handleOperator('/')" id="op-divide" class="btn btn-orange">÷</button>
+
+                <!-- Fila 2 -->
+                <button onclick="appendNumber('7')" class="btn btn-gray-dark">7</button>
+                <button onclick="appendNumber('8')" class="btn btn-gray-dark">8</button>
+                <button onclick="appendNumber('9')" class="btn btn-gray-dark">9</button>
+                <button onclick="handleOperator('*')" id="op-multiply" class="btn btn-orange">×</button>
+
+                <!-- Fila 3 -->
+                <button onclick="appendNumber('4')" class="btn btn-gray-dark">4</button>
+                <button onclick="appendNumber('5')" class="btn btn-gray-dark">5</button>
+                <button onclick="appendNumber('6')" class="btn btn-gray-dark">6</button>
+                <button onclick="handleOperator('-')" id="op-subtract" class="btn btn-orange">-</button>
+
+                <!-- Fila 4 -->
+                <button onclick="appendNumber('1')" class="btn btn-gray-dark">1</button>
+                <button onclick="appendNumber('2')" class="btn btn-gray-dark">2</button>
+                <button onclick="appendNumber('3')" class="btn btn-gray-dark">3</button>
+                <button onclick="handleOperator('+')" id="op-add" class="btn btn-orange">+</button>
+
+                <!-- Fila 5 -->
+                <button onclick="appendNumber('0')" class="btn btn-gray-dark btn-zero">0</button>
+                <button onclick="appendDecimal()" class="btn btn-gray-dark">.</button>
+                <button onclick="calculateResult()" class="btn btn-orange">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentValue = '0';
+        let previousValue = null;
+        let selectedOperator = null;
+        let shouldResetDisplay = false;
+
+        const displayElement = document.getElementById('display');
+        const btnAC = document.getElementById('btn-ac');
+
+        function updateDisplay() {
+            // Ajustar dinámicamente el tamaño del texto para números largos
+            if (currentValue.length > 8) {
+                displayElement.style.fontSize = '36px';
+            } else if (currentValue.length > 6) {
+                displayElement.style.fontSize = '44px';
+            } else {
+                displayElement.style.fontSize = '56px';
+            }
+
+            // Cambiar etiqueta del botón Limpiar (AC / C)
+            if (currentValue !== '0' || previousValue !== null) {
+                btnAC.textContent = 'C';
+            } else {
+                btnAC.textContent = 'AC';
+            }
+
+            displayElement.textContent = formatNumber(currentValue);
+        }
+
+        function formatNumber(numStr) {
+            if (numStr === 'Error') return 'Error';
+            const parts = numStr.split('.');
+            let integerPart = parts[0];
+            const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+
+            // Formato de miles con comas
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return integerPart + decimalPart;
+        }
+
+        function appendNumber(digit) {
+            clearHighlights();
+            if (currentValue === '0' || shouldResetDisplay) {
+                currentValue = digit;
+                shouldResetDisplay = false;
+            } else {
+                if (currentValue.replace(/[^0-9]/g, '').length < 9) {
+                    currentValue += digit;
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            clearHighlights();
+            if (shouldResetDisplay) {
+                currentValue = '0.';
+                shouldResetDisplay = false;
+            } else if (!currentValue.includes('.')) {
+                currentValue += '.';
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(op) {
+            if (selectedOperator !== null && !shouldResetDisplay) {
+                calculateResult();
+            }
+
+            previousValue = currentValue;
+            selectedOperator = op;
+            shouldResetDisplay = true;
+
+            highlightOperator(op);
+        }
+
+        function highlightOperator(op) {
+            clearHighlights();
+            let btnId = '';
+            if (op === '/') btnId = 'op-divide';
+            if (op === '*') btnId = 'op-multiply';
+            if (op === '-') btnId = 'op-subtract';
+            if (op === '+') btnId = 'op-add';
+
+            if (btnId) {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.classList.add('active-op');
+            }
+        }
+
+        function clearHighlights() {
+            const ops = ['op-divide', 'op-multiply', 'op-subtract', 'op-add'];
+            ops.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.classList.remove('active-op');
+            });
+        }
+
+        function handlePercent() {
+            let num = parseFloat(currentValue);
+            if (isNaN(num)) return;
+            num = num / 100;
+            currentValue = cleanResult(num);
+            updateDisplay();
+        }
+
+        function calculateResult() {
+            if (selectedOperator === null || previousValue === null) return;
+
+            const prev = parseFloat(previousValue);
+            const current = parseFloat(currentValue);
+            let result = 0;
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (selectedOperator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        currentValue = 'Error';
+                        updateDisplay();
+                        resetCalculator();
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+            }
+
+            currentValue = cleanResult(result);
+            selectedOperator = null;
+            previousValue = null;
+            shouldResetDisplay = true;
+
+            clearHighlights();
+            updateDisplay();
+        }
+
+        function cleanResult(num) {
+            let resStr = Number(num.toFixed(8)).toString();
+            if (resStr.length > 9) {
+                resStr = num.toPrecision(6).toString();
+            }
+            return resStr;
+        }
+
+        function resetCalculator() {
+            previousValue = null;
+            selectedOperator = null;
+            shouldResetDisplay = false;
+        }
+
+        function handleAC() {
+            currentValue = '0';
+            resetCalculator();
+            clearHighlights();
+            updateDisplay();
+        }
+
+        // Eventos para teclado físico
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            else if (e.key === '.' || e.key === ',') appendDecimal();
+            else if (e.key === '+') handleOperator('+');
+            else if (e.key === '-') handleOperator('-');
+            else if (e.key === '*') handleOperator('*');
+            else if (e.key === '/') { e.preventDefault(); handleOperator('/'); }
+            else if (e.key === '%') handlePercent();
+            else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculateResult(); }
+            else if (e.key === 'Backspace' || e.key === 'Escape') handleAC();
+        });
+
+        // Inicializar display
+        updateDisplay();
+    </script>
+</body>
+</html>
